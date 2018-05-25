@@ -2,7 +2,7 @@ import React from 'react';
 import Graph from 'react-graph-vis';
 
 const options = {
-  autoResize: true,
+  autoResize: false,
   layout: {
     hierarchical: {
       enabled: true,
@@ -27,7 +27,7 @@ const SchemaGraph = ({ graph }) => (
     graph={graph}
     options={options}
     events={events}
-    style={{ height: '640px' }}
+    style={{ height: '800px' }}
   />
 );
 

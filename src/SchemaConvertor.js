@@ -10,79 +10,70 @@ type IntrospectionSchema = {|
 |};
 */
 
-const excludedTypes = [
-  'Boolean',
-  'Float',
-  'Int',
-  'String',
-  '__DirectiveLocation',
-  '__Directive',
-  '__EnumValue',
-  '__Field',
-  '__InputValue',
-  '__Schema',
-  '__TypeKind',
-  '__Type'
-];
-
 const objectValues =
   Object.values || (obj => Object.keys(obj).map(key => obj[key]));
 
-function getTypes(schema) {
-  const typeMap = schema.getTypeMap();
-  if (typeMap) {
-    const types = objectValues(typeMap);
-    return types.map(type => ({
-      name: type.name,
-      fields: getFields(type)
-    }));
-  }
-  return [];
+function traverseRoots(type, acumulator) {
+  if (!isObjectType(type)) return;
+
+  acumulator.addNode(type.name);
+
+  const fields = type.getFields();
+  console.log('root type name', type.name, 'fields', fields);
+
+  Object.keys(fields).forEach(field => {
+    acumulator.addNode(field);
+    acumulator.addEdge(type.name, field);
+    traverseType(fields[field].type, acumulator, field);
+  });
 }
 
-function getFields(type) {
-  if (isObjectType(type)) {
-    const fields = objectValues(type.getFields());
+function traverseType(type, acumulator, parent) {
+  if (!isObjectType(type) || acumulator.hasNode(type.name)) return;
 
-    const objectFields = fields.map(field => ({
-      [field.name]: String(field.type)
-    }));
+  acumulator.addNode(type.name);
+  if (parent != null) acumulator.addEdge(parent, type.name);
 
-    const fieldsMap = objectFields.reduce((prev, current) => {
-      return { ...prev, ...current };
-    }, {});
+  const fields = type.getFields();
+  console.log('type name', type.name, 'fields', fields);
 
-    return fieldsMap;
-  }
-  return {};
-}
-
-function getEdges(type) {
-  const { fields } = type;
-  if (fields) {
-    return Object.keys(fields).map(key => ({
-      from: type.name,
-      to: fields[key]
-    }));
-  }
-  return [];
-}
-
-function convertSchema(schema) {
-  const types = getTypes(schema).filter(
-    type => !excludedTypes.includes(type.name)
+  Object.keys(fields).forEach(field =>
+    traverseType(fields[field].type, acumulator, type.name)
   );
-
-  const nodes = types.map(type => ({
-    id: type.name,
-    label: type.name
-  }));
-
-  const edges = types
-    .map(type => getEdges(type))
-    .reduce((acc, typeConnextions) => acc.concat(typeConnextions), []);
-
-  return { nodes, edges };
 }
 
-export default convertSchema;
+const rootTypes = ['Query', 'Mutation', 'Subscription'];
+
+export default function convertSchema(schema) {
+  let nodes = [];
+  let edges = [];
+
+  const acc = (function acumulator() {
+    function addNode(name) {
+      if (!nodes.includes(name)) nodes.push(name);
+    }
+    function addEdge(parent, child) {
+      edges.push({ from: parent, to: child });
+    }
+    const hasNode = name => nodes.includes(name);
+    return { addNode, addEdge, hasNode };
+  })();
+
+  const types = objectValues(schema.getTypeMap());
+  types
+    .filter(type => rootTypes.includes(type.name))
+    .forEach(type => traverseRoots(type, acc));
+
+  const graph = {
+    nodes: nodes.map(name => ({
+      id: name,
+      label: name,
+      shape: 'box',
+      color: rootTypes.includes(name) ? '#08c' : '#D2E5FF'
+    })),
+    edges
+  };
+
+  console.log(graph);
+  return graph;
+}
