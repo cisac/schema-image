@@ -11,6 +11,12 @@ const options = {
   },
   edges: {
     color: '#000000'
+  },
+  nodes: {
+    font: {
+      size: 16,
+      color: '#fff'
+    }
   }
 };
 

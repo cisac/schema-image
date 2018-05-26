@@ -1,15 +1,5 @@
 import { isObjectType } from 'graphql';
 
-/*
-type IntrospectionSchema = {|
-  +queryType: IntrospectionNamedTypeRef<IntrospectionObjectType>,
-  +mutationType: ?IntrospectionNamedTypeRef<IntrospectionObjectType>,
-  +subscriptionType: ?IntrospectionNamedTypeRef<IntrospectionObjectType>,
-  +types: $ReadOnlyArray<IntrospectionType>,
-  +directives: $ReadOnlyArray<IntrospectionDirective>,
-|};
-*/
-
 const objectValues =
   Object.values || (obj => Object.keys(obj).map(key => obj[key]));
 
@@ -19,8 +9,8 @@ function traverseRoots(type, acumulator) {
   acumulator.addNode(type.name);
 
   const fields = type.getFields();
-  console.log('root type name', type.name, 'fields', fields);
 
+  // create node for each query/mutation
   Object.keys(fields).forEach(field => {
     acumulator.addNode(field);
     acumulator.addEdge(type.name, field);
@@ -31,11 +21,12 @@ function traverseRoots(type, acumulator) {
 function traverseType(type, acumulator, parent) {
   if (!isObjectType(type) || acumulator.hasNode(type.name)) return;
 
+  // add new node to graph
   acumulator.addNode(type.name);
+  // add edge
   if (parent != null) acumulator.addEdge(parent, type.name);
 
   const fields = type.getFields();
-  console.log('type name', type.name, 'fields', fields);
 
   Object.keys(fields).forEach(field =>
     traverseType(fields[field].type, acumulator, type.name)
@@ -59,7 +50,9 @@ export default function convertSchema(schema) {
     return { addNode, addEdge, hasNode };
   })();
 
+  // read types from schema
   const types = objectValues(schema.getTypeMap());
+  // traverse DFS and add nodes/edges
   types
     .filter(type => rootTypes.includes(type.name))
     .forEach(type => traverseRoots(type, acc));
@@ -69,11 +62,10 @@ export default function convertSchema(schema) {
       id: name,
       label: name,
       shape: 'box',
-      color: rootTypes.includes(name) ? '#08c' : '#D2E5FF'
+      color: rootTypes.includes(name) ? '#08c' : '#03a9f4'
     })),
     edges
   };
 
-  console.log(graph);
   return graph;
 }

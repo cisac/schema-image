@@ -16,6 +16,7 @@ class App extends Component {
 
     return (
       <div>
+        <h1>Schema-Viz</h1>
         <SettingsForm uri={uri} updateURI={this.updateURI} />
         <SchemaLoader uri={uri}>
           {(schema, loading, err) => {
