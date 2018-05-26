@@ -1,6 +1,7 @@
 
 ![screenshot](assets/Screenshot.png)
 
+### How is working
 It reads GraphQL Schema from an URL
 ```javascript
   readSchema = uri => {
@@ -51,4 +52,15 @@ and converted to [visjs](http://visjs.org/) graph format
     }
   ]
 }
+```
+and displyed in a graph
+```javascript
+    <SchemaLoader uri={uri}>
+        {(schema, loading, err) => {
+            if (err) return `Error: ${err}`;
+            if (loading) return 'Loading...';
+            const graph = convertSchema(schema);
+            return <SchemaGraph graph={graph} />;
+        }}
+    </SchemaLoader>
 ```
