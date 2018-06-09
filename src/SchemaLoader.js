@@ -1,6 +1,6 @@
-import React from 'react';
-import { HttpLink } from 'apollo-link-http';
-import { introspectSchema } from 'graphql-tools';
+import React from "react";
+import { HttpLink } from "apollo-link-http";
+import { introspectSchema } from "graphql-tools";
 
 class SchemaLoader extends React.Component {
   state = {};
@@ -23,7 +23,7 @@ class SchemaLoader extends React.Component {
     const link = new HttpLink({ uri });
     this.setState({ loading: true });
     introspectSchema(link)
-      .then(schema => this.setState({ schema, loading: false }))
+      .then(schema => this.setState({ schema, loading: false, err: null }))
       .catch(err => {
         console.error(err);
         this.setState({ loading: false, err });
