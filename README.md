@@ -53,7 +53,7 @@ and converted to [visjs](http://visjs.org/) graph format
   ]
 }
 ```
-and displyed in a graph
+and displayed in a graph
 ```javascript
     <SchemaLoader uri={uri}>
         {(schema, loading, err) => {
